@@ -1,0 +1,5 @@
+# A NIF is a shared object the BEAM loads into itself, so on macOS the linker
+# has to leave the BEAM's own symbols unresolved rather than looking for a
+# binary that has them.
+[target.'cfg(target_os = "macos")']
+rustflags = ["-C", "link-arg=-undefined", "-C", "link-arg=dynamic_lookup"]

@@ -1,0 +1,62 @@
+name: release
+
+# A tag does two things, and only a tag:
+#
+#   * publishes the package to Hex — `mix hex.publish`, which wants the
+#     `HEX_API_KEY` secret on this repository;
+#   * attaches the source to a GitHub release, so the tag explains itself.
+#
+# Nothing is published from a branch: `ci` proves a commit, a tag says it is a
+# version. The gates run again here rather than being trusted from another
+# workflow's conclusion, because a workflow's own log is the only thing that
+# proves the tree it is publishing.
+
+on:
+  push:
+    tags: ["v*.*.*"]
+
+permissions:
+  contents: write
+
+env:
+  MIX_ENV: prod
+  ELIXIR_VERSION: "1.20.5"
+  OTP_VERSION: "29.1"
+
+jobs:
+  publish:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+      - uses: erlef/setup-beam@v1
+        with:
+          elixir-version: ${{ env.ELIXIR_VERSION }}
+          otp-version: ${{ env.OTP_VERSION }}
+      - uses: dtolnay/rust-toolchain@stable
+      - run: mix deps.get
+      - name: The tag is the version
+        run: |
+          version=$(sed -n 's/^  @version "\(.*\)"$/\1/p' mix.exs | head -1)
+          tag=${GITHUB_REF_NAME#v}
+          if [ "$version" != "$tag" ]; then
+            echo "mix.exs says $version and the tag says $tag — one of them is wrong" >&2
+            exit 1
+          fi
+      - run: mix hex.build
+      - name: Publish to Hex
+        env:
+          HEX_API_KEY: ${{ secrets.HEX_API_KEY }}
+        run: |
+          if [ -z "$HEX_API_KEY" ]; then
+            echo "no HEX_API_KEY secret: the package was built and not published" >&2
+            exit 1
+          fi
+          mix hex.publish --yes
+      - name: Release notes
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" \
+            --title "$GITHUB_REF_NAME" \
+            --generate-notes \
+            ex_quiddity-*.tar

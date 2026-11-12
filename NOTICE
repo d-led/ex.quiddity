@@ -1,0 +1,24 @@
+ExQuiddity: manufacturing features and exact geometry of a STEP part, from Elixir.
+
+Copyright (c) Dmitry Ledentsov and contributors.
+
+This Source Code Form is subject to the terms of the Mozilla Public License, v.
+2.0. If a copy of the MPL was not distributed with this file, You can obtain one
+at https://mozilla.org/MPL/2.0/.
+
+It builds on work by others, whose licences it keeps:
+
+  * quiddity  — manufacturing feature recognition from STEP B-rep models,
+    Copyright (c) the quiddity authors, Apache License 2.0
+    (https://github.com/pzfreo/quiddity). Used as a dependency; not modified.
+  * haecceity — the exact B-rep reader and geometry kernel under quiddity, same
+    project and licence. Used as a dependency; not modified.
+  * ExTbpMonty.Core — the Thousand Brains Project's sensorimotor framework,
+    ported to the BEAM (https://github.com/d-led/ex.tbp.monty), which is the
+    project's own reimplementation of Monty (MIT, Copyright (c) Thousand Brains
+    Project). `Quiddity.Percept` and `Quiddity.Monty.*` call its feature
+    extraction rather than re-implementing it.
+
+The STEP test fixtures under `test/fixtures/` came from quiddity's own test
+suite, which takes them from public sources (NIST MBE PMI test cases, the
+FreeCAD parts library, build123d examples); each file names its source beside it.

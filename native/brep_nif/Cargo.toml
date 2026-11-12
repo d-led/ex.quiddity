@@ -1,0 +1,26 @@
+[package]
+name = "brep_nif"
+version = "0.1.0"
+authors = []
+edition = "2021"
+
+[lib]
+name = "brep_nif"
+path = "src/lib.rs"
+crate-type = ["cdylib"]
+
+[dependencies]
+# The feature recogniser and the geometry under it, from crates.io. `quiddity`
+# re-exports haecceity as `quiddity::kernel`, and the two must be the *same*
+# crate instance for a `Part` to cross between them, so both are named here at
+# the one version quiddity pins.
+quiddity = { version = "=0.5.0", default-features = false }
+haecceity = { version = "=0.5.0", default-features = false }
+rustler = "0.38"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+sha2 = "0.11"
+
+[profile.release]
+opt-level = 3
+lto = true
