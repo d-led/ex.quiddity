@@ -55,6 +55,7 @@ jobs:
           path: |
             deps
             _build
+            priv/native
           key: deps-${{ runner.os }}-${{ env.OTP_VERSION }}-${{ env.ELIXIR_VERSION }}-${{ hashFiles('mix.lock') }}
           restore-keys: deps-${{ runner.os }}-
       - run: mix deps.get
@@ -79,6 +80,7 @@ jobs:
           path: |
             deps
             _build
+            priv/native
           key: deps-test-${{ runner.os }}-${{ env.OTP_VERSION }}-${{ env.ELIXIR_VERSION }}-${{ hashFiles('mix.lock') }}
           restore-keys: deps-test-${{ runner.os }}-
       - run: mix deps.get
@@ -103,6 +105,7 @@ jobs:
           path: |
             deps
             _build
+            priv/native
             priv/plts
           key: deps-types-${{ runner.os }}-${{ env.OTP_VERSION }}-${{ env.ELIXIR_VERSION }}-${{ hashFiles('mix.lock') }}
           restore-keys: deps-types-${{ runner.os }}-
