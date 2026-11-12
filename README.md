@@ -1,9 +1,10 @@
 # ex_quiddity
 
-Manufacturing features of a STEP part, and the exact geometry under them, from
-Elixir.
+An Elixir wrapper of [quiddity](https://github.com/pzfreo/quiddity) to bring
+feature extraction from CAD, with the geometry underneath it: rays, frames,
+meshes and surface samples. Wrapped via rustler.
 
-It is a binding of [quiddity](https://github.com/pzfreo/quiddity) and
+It is a binding of quiddity and
 [haecceity](https://github.com/pzfreo/quiddity/tree/main/crates/haecceity), both
 pure Rust with no OpenCascade and no CAD system: read a STEP file, and ask what
 its holes, pockets, slots, bosses, fillets and turned features are, where its

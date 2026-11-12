@@ -1,7 +1,7 @@
 defmodule ExQuiddity.MixProject do
   use Mix.Project
 
-  @version "0.1.0"
+  @version "0.1.2"
   @source_url "https://github.com/d-led/ex.quiddity"
 
   def project do
@@ -51,10 +51,9 @@ defmodule ExQuiddity.MixProject do
   end
 
   defp description do
-    "Manufacturing features of a STEP part — holes, pockets, slots, bosses, " <>
-      "fillets, turned and sheet-metal features — from Elixir, with the geometry " <>
-      "underneath it: rays, frames, meshes and surface samples. Pure Rust engine " <>
-      "(quiddity and haecceity), no OpenCascade, no CAD system."
+    "An Elixir wrapper of github.com/pzfreo/quiddity to bring feature extraction " <>
+      "from CAD, with the geometry underneath it: rays, frames, meshes and surface " <>
+      "samples. Wrapped via rustler."
   end
 
   defp package do
