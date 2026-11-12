@@ -14,8 +14,7 @@ defmodule ExQuiddity.MixProject do
       deps: deps(),
       dialyzer: [plt_add_apps: [:mix, :ex_unit]],
 
-      # Hex.pm: a CAD part you can ask questions about, and the bridge that lets
-      # Monty learn from one.
+      # Hex.pm: a CAD part you can ask questions about.
       name: "ExQuiddity",
       description: description(),
       package: package(),
@@ -42,15 +41,9 @@ defmodule ExQuiddity.MixProject do
       # beyond the `.so` the release carries.
       {:rustler, "~> 0.38", runtime: false},
 
-      # Recognition documents, camera descriptions and library records are JSON:
-      # the boundary keeps one representation instead of a struct for every shape.
+      # Recognition documents, camera descriptions and scene notes are JSON: the
+      # boundary keeps one representation instead of a struct for every shape.
       {:jason, "~> 1.2"},
-
-      # `Quiddity.Monty.*` is the bridge, and Monty's own feature extraction is
-      # what it must not re-implement: a node has to be the percept the sensor
-      # modules would have made, or a graph trained from CAD is a different
-      # graph from the one a run matches against.
-      {:ex_tbp_monty_core, "~> 0.1.2"},
       {:credo, "~> 1.7", only: [:dev, :test], runtime: false},
       {:dialyxir, "~> 1.4", only: [:dev, :test], runtime: false},
       {:ex_doc, "~> 0.38", only: :dev, runtime: false}
@@ -60,8 +53,8 @@ defmodule ExQuiddity.MixProject do
   defp description do
     "Manufacturing features of a STEP part — holes, pockets, slots, bosses, " <>
       "fillets, turned and sheet-metal features — from Elixir, with the geometry " <>
-      "underneath it: rays, frames, surface samples and a graph memory Monty can " <>
-      "recognise with. Pure Rust engine (quiddity and haecceity), no OpenCascade."
+      "underneath it: rays, frames, meshes and surface samples. Pure Rust engine " <>
+      "(quiddity and haecceity), no OpenCascade, no CAD system."
   end
 
   defp package do
@@ -78,10 +71,9 @@ defmodule ExQuiddity.MixProject do
   defp docs do
     [
       main: "readme",
-      extras: ["README.md", "docs/why.md", "docs/monty.md"],
+      extras: ["README.md", "docs/why.md", "docs/roadmap.md"],
       groups_for_modules: [
         Geometry: [Quiddity, Quiddity.Part, Quiddity.Face, Quiddity.Camera, Quiddity.Frame],
-        "The bridge to Monty": [Quiddity.Percept, Quiddity.Monty.Training, Quiddity.Monty.Library],
         Scenes: [Quiddity.Mjcf],
         "Model Context Protocol": [Quiddity.Mcp]
       ]

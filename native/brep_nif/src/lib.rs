@@ -388,7 +388,7 @@ fn brep_mesh<'a>(
     ))
 }
 
-// -- points on the surface, for a graph memory ----------------------------
+// -- points on the surface ------------------------------------------------
 
 /// Points spread over the part's surface, `spacing` millimetres apart:
 /// `(points, normals, faces, meta)`.

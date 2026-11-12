@@ -115,12 +115,12 @@ defmodule Quiddity.Frame do
   end
 
   @doc """
-  The rows a Monty observation carries: `[x, y, z, semantic_id]` per pixel.
+  The rows a sensor observation carries: `[x, y, z, semantic_id]` per pixel.
 
   A pixel that met the part carries `semantic_id`; a pixel that met nothing
-  carries `0.0`, which is Monty's background. That fourth column is what
-  `Monty.Frameworks.Models.SensorModules.ObservationProcessor` reads to decide
-  `on_object` and `object_coverage`, so it has to mean exactly this.
+  carries `0.0`, the background id. A sensor model reads that fourth column to
+  decide which pixels are on the object, and what fraction of the patch it
+  covers.
   """
   @spec semantic_3d(t(), keyword()) :: [[float()]]
   def semantic_3d(%__MODULE__{} = frame, options \\ []) do

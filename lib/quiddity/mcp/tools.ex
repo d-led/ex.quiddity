@@ -9,8 +9,8 @@ defmodule Quiddity.Mcp.Tools do
   specification says "this call failed, the message says how" rather than "the
   server is broken".
 
-  Every tool is read-only except the two that write a file the caller named:
-  `monty_train` (a graph memory) and `quiddity_export_mjcf` (a scene).
+  Every tool is read-only except one that writes a file the caller named:
+  `quiddity_export_mjcf`, a scene in metres.
 
   ## Where the parts come from
 
@@ -20,8 +20,7 @@ defmodule Quiddity.Mcp.Tools do
   to hold.
   """
 
-  alias Quiddity.{Camera, Face, Frame, Mjcf, Part, Percept, Recognition}
-  alias Quiddity.Monty.Training
+  alias Quiddity.{Camera, Face, Frame, Mjcf, Part, Recognition}
 
   @read_only %{
     "readOnlyHint" => true,
@@ -166,67 +165,6 @@ defmodule Quiddity.Mcp.Tools do
       "annotations" => @read_only
     },
     %{
-      "name" => "monty_perceive",
-      "title" => "The percept Monty would make here",
-      "description" =>
-        "Renders the same frame and runs Monty's own sensor-module pipeline over it: the " <>
-          "location, the surface normal and the two curvature frames (as `pose_vectors`), " <>
-          "whether the pose is fully defined, the principal curvatures, `on_object` and " <>
-          "`object_coverage`. This is the percept a learning module receives — and the " <>
-          "node a graph memory would store.",
-      "inputSchema" => %{
-        "type" => "object",
-        "properties" => %{
-          "path" => @path,
-          "point" => @point,
-          "normal" => %{
-            "type" => "array",
-            "items" => %{"type" => "number"},
-            "minItems" => 3,
-            "maxItems" => 3,
-            "description" => "The surface normal to look along. Defaults to the nearest face's."
-          },
-          "distance" => %{
-            "type" => "number",
-            "description" => "Millimetres off the surface (default 5)."
-          }
-        },
-        "required" => ["path", "point"]
-      },
-      "annotations" => @read_only
-    },
-    %{
-      "name" => "monty_train",
-      "title" => "Build a Monty graph memory from the part",
-      "description" =>
-        "Samples the part's surface, takes a percept at each visit, and writes the graph " <>
-          "memory a Monty run loads (a gzipped JSON-lines library). The labels are exact: " <>
-          "quiddity says which feature each node is on. Answers the path, the node count, " <>
-          "the features held, and how many nodes each family contributed. Writes the file " <>
-          "you name and nothing else.",
-      "inputSchema" => %{
-        "type" => "object",
-        "properties" => %{
-          "path" => @path,
-          "object_id" => %{
-            "type" => "string",
-            "description" => "The name the graph is matched as, e.g. `bracket`."
-          },
-          "out" => %{"type" => "string", "description" => "Where to write the library."},
-          "spacing" => %{
-            "type" => "number",
-            "description" => "Millimetres between visits (default 2)."
-          },
-          "limit" => %{
-            "type" => "integer",
-            "description" => "The most visits to make (default 2000)."
-          }
-        },
-        "required" => ["path", "object_id", "out"]
-      },
-      "annotations" => @writes
-    },
-    %{
       "name" => "quiddity_export_mjcf",
       "title" => "The part as a MuJoCo scene",
       "description" =>
@@ -345,36 +283,6 @@ defmodule Quiddity.Mcp.Tools do
     end)
   end
 
-  defp action("monty_perceive", %{"path" => path, "point" => point} = arguments, state) do
-    with_part(state, path, fn part, state ->
-      with {:ok, camera} <- sensor_camera(part, point, arguments),
-           {:ok, frame} <- Quiddity.frame(part, camera),
-           {:ok, recognition} <- Quiddity.features(part),
-           {:ok, message} <- Percept.message(frame, sensor_module_id: "patch") do
-        {:ok, percept_answer(part, frame, message, recognition), state}
-      else
-        {:error, error} -> {:error, Quiddity.Mcp.describe_error(error), state}
-      end
-    end)
-  end
-
-  defp action(
-         "monty_train",
-         %{"path" => path, "object_id" => id, "out" => out} = arguments,
-         state
-       ) do
-    with_part(state, path, fn part, state ->
-      options =
-        [spacing: Map.get(arguments, "spacing", 2.0), limit: Map.get(arguments, "limit", 2_000)]
-        |> Enum.reject(fn {_key, value} -> is_nil(value) end)
-
-      case Training.write(part, id, out, options) do
-        {:ok, answer} -> {:ok, train_answer(answer), state}
-        {:error, error} -> {:error, Quiddity.Mcp.describe_error(error), state}
-      end
-    end)
-  end
-
   defp action("quiddity_export_mjcf", %{"path" => path, "out" => out} = arguments, state) do
     with_part(state, path, fn part, state ->
       options =
@@ -408,8 +316,6 @@ defmodule Quiddity.Mcp.Tools do
   defp required("quiddity_face"), do: ["path", "face"]
   defp required("quiddity_probe"), do: ["path", "point"]
   defp required("quiddity_sense"), do: ["path", "point"]
-  defp required("monty_perceive"), do: ["path", "point"]
-  defp required("monty_train"), do: ["path", "object_id", "out"]
   defp required("quiddity_export_mjcf"), do: ["path", "out"]
   defp required("quiddity_correspond"), do: ["old", "new"]
   defp required(_unknown), do: []
@@ -563,57 +469,12 @@ defmodule Quiddity.Mcp.Tools do
     }
   end
 
-  defp percept_answer(part, frame, message, recognition) do
-    features = Percept.node_features(message)
-    {_point, _normal, face} = Frame.centre(frame)
-    family = face && Recognition.family_of(recognition, face)
-
-    text = """
-    Monty's percept at #{vector(message.location)}:
-      * pose_vectors #{pose(features["pose_vectors"])}, pose fully defined: #{features["pose_fully_defined"]}
-      * principal_curvatures_log #{inspect(features["principal_curvatures_log"])}
-      * on_object #{features["on_object"]}, object_coverage #{features["object_coverage"]}
-      * depths: #{inspect(features["min_depth"])} to #{inspect(features["mean_depth"])} (min, mean)
-    #{if face, do: "The centre pixel is on face #{face}#{if family, do: " — a #{family} feature", else: " (part of the body)"}.", else: "The centre pixel missed the part."}
-    #{if Part.face_count(part) > 0, do: "", else: ""}
-    """
-
-    %{
-      text: text,
-      structured: %{
-        "location" => message.location,
-        "features" => features,
-        "face" => face,
-        "family" => family,
-        "semantic_id" => message.semantic_id
-      }
-    }
-  end
-
   defp mjcf_answer(part, out) do
     text = """
     Wrote #{out} — #{Path.basename(part.path)} as an MJCF model in metres. #{Part.face_count(part)} faces, and the part keeps the place the file gives it.
     """
 
     %{text: text, structured: %{"out" => out, "faces" => Part.face_count(part)}}
-  end
-
-  defp train_answer(answer) do
-    families =
-      answer.families
-      |> Enum.sort_by(fn {_family, count} -> -count end)
-      |> Enum.map_join(", ", fn {family, count} -> "#{family || "body"} (#{count})" end)
-
-    text = """
-    Wrote #{answer.path} — `#{answer.object_id}`, #{answer.nodes} nodes from #{answer.visited} visits#{if answer.skipped > 0, do: " (#{answer.skipped} skipped: their patch did not see the surface)", else: ""}#{if answer.truncated, do: ", and the visit limit truncated the part", else: ""}.
-    Features held per node: #{Enum.join(answer.features, ", ")}.
-    Nodes by feature: #{families}.
-    Source: #{answer.source_sha256}
-
-    This is the file a Monty run loads as a pretrained memory; the labels came from quiddity, so the graph knows which feature each node is on.
-    """
-
-    %{text: text, structured: Map.new(answer) |> Map.put("families", Map.new(answer.families))}
   end
 
   defp correspond_answer(old, new, correspondence) do
@@ -711,11 +572,6 @@ defmodule Quiddity.Mcp.Tools do
   defp print(value) when is_float(value), do: number(value)
   defp print(value) when is_list(value), do: vector(value)
   defp print(value), do: to_string(value)
-
-  defp pose([normal | _rest]) when is_list(normal),
-    do: "normal #{vector(normal)} → curvature frames"
-
-  defp pose(other), do: inspect(other)
 
   defp vector(values) when is_list(values),
     do: "(" <> Enum.map_join(values, ", ", &number/1) <> ")"

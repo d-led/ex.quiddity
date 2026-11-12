@@ -1,61 +1,59 @@
 # Why this exists
 
-Two tools answer questions about a physical part, and neither can answer the
-other's.
+quiddity is a Rust library. This is a binding of it, and a binding has to say
+what a call from Elixir adds to a call from Rust.
 
-**quiddity** reads a STEP file and says what the part *is*: a Ø8 hole through the
-plate, a counterbore, six fillets, a pattern of pockets. It works from the B-rep
-alone — the exact surfaces a CAD system wrote — so its answers are precise, and
-it needs the whole file to give them.
+## The engine is worth having on its own
 
-**Monty** learns an object by sensing it: a patch of surface here, another there,
-evidence accumulating about which object this is and where on it the sensor is.
-It works from partial, noisy, local information — a touch, a depth patch, a
-sequence of them — which is what a real machine has.
+Feature recognition from a STEP B-rep is a hard problem that quiddity already
+solves: holes, pockets, slots, bosses, steps, patterns, fillets, chamfers,
+grooves, sheet-metal and turned features, each with a measured size and position,
+with a face-by-face account of what it could not explain. The alternative to a
+binding is to reimplement that, or to shell out to another process and pass files
+across. Both are worse than a function call.
 
-A CAD part sits between them, and that is what this package is for.
+## A part is a value, and geometry is a resource
 
-## What quiddity has that Monty cannot get on its own
+- A **part** is a value functions take: `Quiddity.open/1` answers a
+  `Quiddity.Part`, and every other call names it.
+- A part is a **Rust resource**. It is parsed once, it never changes, and every
+  process on the node uses the same one — there is no pool, no checkout and no
+  copy of the geometry per process.
+- Answers are **plain Elixir data**: maps, lists, floats. Nothing hands a caller
+  a pointer to interpret.
 
-A part's surface, exactly, and the labels. Monty's pretrained memories come from
-episodes: an agent explores an object and stores what it perceived. That works,
-and it is slow, uneven (the agent explores what it happened to touch), and it
-cannot tell you *why* a region is called what it is called.
+That last point decides the rest of the design. Recognition documents, camera
+descriptions and scene notes are document-shaped, so they arrive as decoded maps
+in quiddity's own JSON shape. Points, normals, faces and depth are pixel-scale,
+so they arrive as flat binaries, read with `:binary` rather than decoded element
+by element.
 
-A CAD part has been explored already. Sampling its surface at a chosen spacing
-gives a graph memory that is dense and even, and the recognition labels every
-face, so each node knows which feature it belongs to — a hole's wall, a fillet,
-plain stock — without concluding it from evidence. That is supervised training
-without a supervisor: the drawing is the supervision.
+## The exact B-rep is what makes the frame worth having
 
-## What Monty has that quiddity cannot get on its own
+A rasteriser answers "which triangle is nearest this pixel's ray", to the
+precision of the mesh. `Quiddity.frame/2` intersects the ray with the surfaces
+the CAD system actually wrote, so a pixel knows the point on the surface, the
+outward normal there, and which face it landed on. A curvature read off a
+tessellation is the curvature of the tessellation.
 
-Robustness to *not* having the file. quiddity needs a well-formed B-rep; a real
-inspection touches a part, sees a patch of it, and has no idea which half of the
-drawing it is on. Monty's whole machinery — hypotheses, evidence, voting between
-modules — is about deciding that from partial information.
+`Quiddity.mesh/2` is still there for the cases that want triangles — a physics
+engine, a viewer — and it is explicit about being an approximation, with a
+tolerance the caller chooses.
 
-So the two compose in both directions:
+## What it is not
 
-- **training**: CAD → sampled percepts → a graph memory a run loads;
-- **interpretation**: a sensed patch → Monty's percept → the same features
-  quiddity would name, because the graph was built from the same percepts. And
-  `Quiddity.ray/4` and `Quiddity.nearest/3` answer what is under a coordinate against the exact B-rep,
-  which is how a sensed point becomes a named feature.
+It is not a CAD system, a viewer or a modelling API: it reads geometry and does
+not write it. It is not a metrology pipeline, and it does not compare a scan
+against a drawing. It carries no sensor model: the camera here is geometry, and
+what a perception framework makes of a frame belongs in that framework's own
+package.
 
-## Where MuJoCo comes in
+## Where the limits are
 
-A B-rep can be ray cast exactly, which is what `Quiddity.frame/2` does — but a
-surface agent that has to make contact, slide along a wall and be pushed around
-needs a physics engine. `Quiddity.Mjcf` writes the meshed part as a MuJoCo scene,
-so the same part can be explored by a body with contacts as well as by rays. The
-scene holds the part and nothing else: the body, its sensors and its actuators
-are the experiment's.
-
-## What this is not
-
-It is not a model of an inspection cell, and it is not a substitute for a
-metrology pipeline. It is the join between a drawing and a sensorimotor learner,
-built so that each side keeps its own vocabulary: quiddity's faces and families
-on one side, Monty's locations, poses and evidence on the other, and one module
-where they meet.
+- quiddity reports what it can prove from the geometry. A file that reads without
+  errors is not a promise every feature was found; `Recognition.unexplained_faces/1`
+  is where that accounting is kept.
+- A B-rep has no colour. `Quiddity.Frame.rgba/2` shades by surface direction, so
+  a colour read from a frame says how the surface turns, not what it is painted.
+- A resource is local to its node. A `Quiddity.Part` cannot be sent to another
+  node: geometry does not travel.

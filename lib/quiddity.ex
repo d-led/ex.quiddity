@@ -36,13 +36,14 @@ defmodule Quiddity do
   the node at once — and, because it is a resource rather than a term, it cannot
   be sent to another node, which is the honest boundary: geometry is local.
 
-  ## The bridge to Monty
+  ## The camera is geometry, not a learner
 
-  `Quiddity.Percept` turns a frame into the observation a Monty sensor module
-  reads, `Quiddity.Monty.Training` builds a graph memory from a part, and
-  `Quiddity.Monty.Library` writes one in the form a Monty run loads. A CAD part
-  is the object a sensorimotor learner cannot otherwise be *trained* on: it knows
-  which face is which, so a node's label is exact rather than a conclusion.
+  `Quiddity.Camera` and `Quiddity.Frame` are a pinhole camera and the frame it
+  renders against the exact B-rep. `Camera.cam_to_world/1` and
+  `Frame.semantic_3d/2` answer the two matrices a sensor model conventionally
+  takes; what a perception or learning framework makes of them is that
+  framework's business, in that framework's package. Nothing here interprets
+  them.
 
   ## Limits, said out loud
 

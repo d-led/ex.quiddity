@@ -13,11 +13,6 @@ It builds on work by others, whose licences it keeps:
     (https://github.com/pzfreo/quiddity). Used as a dependency; not modified.
   * haecceity — the exact B-rep reader and geometry kernel under quiddity, same
     project and licence. Used as a dependency; not modified.
-  * ExTbpMonty.Core — the Thousand Brains Project's sensorimotor framework,
-    ported to the BEAM (https://github.com/d-led/ex.tbp.monty), which is the
-    project's own reimplementation of Monty (MIT, Copyright (c) Thousand Brains
-    Project). `Quiddity.Percept` and `Quiddity.Monty.*` call its feature
-    extraction rather than re-implementing it.
 
 The STEP test fixtures under `test/fixtures/` came from quiddity's own test
 suite, which takes them from public sources (NIST MBE PMI test cases, the

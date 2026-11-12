@@ -4,9 +4,10 @@ defmodule Quiddity.Camera do
 
   The basis is spelled out rather than inferred — `forward`, `right`, `up` — so a
   frame's pixel geometry is a property of this struct and nothing has to agree
-  with MuJoCo about which way a camera's own −z points. The defaults are the ones
-  a Monty patch sensor uses: 64 × 64 pixels, a 66° field of view, a metre past the
-  part, so a CAD frame and a simulator frame cover the same solid angle.
+  with MuJoCo about which way a camera's own −z points. The defaults are a patch
+  sensor's: 64 × 64 pixels over a 66° field of view, a metre past the part, so a
+  frame rendered here and a frame rendered by a simulator can cover the same
+  solid angle.
 
   Millimetres, everywhere: a STEP file is in millimetres and so is this.
   """
@@ -97,7 +98,7 @@ defmodule Quiddity.Camera do
     }
   end
 
-  @doc "The `cam_to_world` matrix a Monty observation carries, as rows."
+  @doc "The camera's basis and origin as a 4 × 4 matrix, rows first."
   @spec cam_to_world(t()) :: [[float()]]
   def cam_to_world(%__MODULE__{} = camera) do
     [r1, r2, r3] = [camera.right, camera.up, camera.forward]

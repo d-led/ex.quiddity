@@ -267,7 +267,7 @@ defmodule QuiddityTest do
       assert_in_delta 0.0, dot(camera.up, camera.forward), 1.0e-12
     end
 
-    test "the camera's pose is the matrix a Monty observation carries" do
+    test "the camera's pose is its basis in world coordinates, as rows" do
       {:ok, camera} = Camera.looking_at([1.0, 2.0, 3.0], [1.0, 2.0, 0.0])
       [r1, r2, r3, r4] = Camera.cam_to_world(camera)
 

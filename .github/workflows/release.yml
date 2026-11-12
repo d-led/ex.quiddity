@@ -19,7 +19,9 @@ permissions:
   contents: write
 
 env:
-  MIX_ENV: prod
+  # `mix hex.publish` publishes the docs as well as the package, and docs are
+  # built by ex_doc — a development dependency — so this job runs in `dev`.
+  MIX_ENV: dev
   ELIXIR_VERSION: "1.20.5"
   OTP_VERSION: "29.1"
 

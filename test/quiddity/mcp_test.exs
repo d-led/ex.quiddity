@@ -137,7 +137,7 @@ defmodule Quiddity.McpTest do
     end
   end
 
-  describe "quiddity_sense and monty_perceive" do
+  describe "quiddity_sense" do
     test "a sensor on the boss sees the boss" do
       {reply, _state} = tool("quiddity_sense", %{"path" => @fixture, "point" => @boss_top})
 
@@ -145,52 +145,6 @@ defmodule Quiddity.McpTest do
       assert text =~ "64 × 64 frame"
       assert text =~ "Depth"
       assert reply["result"]["structuredContent"]["coverage"] > 0.9
-    end
-
-    test "the percept is Monty's, with a pose in the sensor's frame and its feature" do
-      {reply, _state} = tool("monty_perceive", %{"path" => @fixture, "point" => @boss_top})
-
-      text = text_of(reply)
-      assert text =~ "pose_vectors"
-      assert text =~ "on_object 1.0"
-
-      structured = reply["result"]["structuredContent"]
-      [normal, first, second] = structured["features"]["pose_vectors"]
-
-      # A pose vector is in the *sensor's* frame: the sensor looks along its own
-      # −z, so a patch reading a surface straight on reports a normal of −z.
-      assert_in_delta 1.0, length_of(normal), 1.0e-9
-      assert_in_delta(-1.0, Enum.at(normal, 2), 1.0e-9)
-      assert_in_delta 1.0, length_of(first), 1.0e-9
-      assert_in_delta 1.0, length_of(second), 1.0e-9
-
-      # The boss's top is flat, so the curvature the patch fits is flat too.
-      assert_in_delta 0.0, structured["features"]["principal_curvatures_log"] |> Enum.at(0), 0.1
-      assert structured["face"] == 8
-    end
-  end
-
-  describe "monty_train" do
-    @tag :tmp_dir
-    test "writes a library a run loads, and says what is in it", %{tmp_dir: dir} do
-      out = Path.join(dir, "plate.jsonl.gz")
-
-      {reply, _state} =
-        tool("monty_train", %{
-          "path" => @fixture,
-          "object_id" => "through_hole_plate",
-          "out" => out,
-          "spacing" => 12.0,
-          "limit" => 30
-        })
-
-      assert reply["result"]["isError"] == false, text_of(reply)
-      assert File.exists?(out)
-
-      structured = reply["result"]["structuredContent"]
-      assert structured["object_id"] == "through_hole_plate"
-      assert structured["nodes"] > 0
-      assert "pose_vectors" in structured["features"]
     end
   end
 
@@ -245,6 +199,4 @@ defmodule Quiddity.McpTest do
   end
 
   defp text_of(reply), do: reply["result"]["content"] |> hd() |> Map.fetch!("text")
-
-  defp length_of([x, y, z]), do: :math.sqrt(x * x + y * y + z * z)
 end

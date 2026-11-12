@@ -136,7 +136,11 @@ $RECYCLE.BIN/
 ### ex_quiddity ###
 # The compiled NIF belongs to the machine that built it.
 /priv/native/
-# Libraries written by a training run: generated, never committed.
+# Where a test that names a temporary directory writes.
+/tmp/
+# Anything a generator here writes at run time, never committed.
 /priv/trained/
 # A package built by `mix hex.build`.
 /ex_quiddity-*.tar
+# The log of a CI run watched from here.
+/.ci/

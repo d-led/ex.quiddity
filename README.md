@@ -1,8 +1,7 @@
 # ex_quiddity
 
 Manufacturing features of a STEP part, and the exact geometry under them, from
-Elixir — with the bridge that lets [Monty](https://thousandbrains.org) learn an
-object from a CAD file.
+Elixir.
 
 It is a binding of [quiddity](https://github.com/pzfreo/quiddity) and
 [haecceity](https://github.com/pzfreo/quiddity/tree/main/crates/haecceity), both
@@ -39,39 +38,17 @@ A frame is the interesting one: rays are cast against the **exact B-rep**, so
 every pixel knows the point on the surface, the outward normal there, and which
 face it landed on — not a depth buffer's approximation of it.
 
-## The bridge to Monty
+## A note on the sensor model, and where it lives
 
-[Monty](https://thousandbrains.org) is a sensorimotor learning framework: it
-learns an object by touching it, and recognises it later from partial sensing.
-A CAD part is the one object it cannot be trained on the usual way — nobody can
-feel every point of it — and a CAD part is also the one object whose surface is
-known exactly. So:
+A frame is a rendering: `Quiddity.Camera` builds the pinhole camera, including
+the geometry of a 64 × 64 patch sensor with a 66° field of view, and
+`Quiddity.Frame` decodes the answer into points, normals, face ids, depth,
+shaded RGBA and `semantic_3d` rows.
 
-```elixir
-{:ok, part} = Quiddity.open("bracket.step")
-
-# What Monty's own sensor modules perceive here:
-{:ok, camera} = Quiddity.Camera.patch([15.0, 0.0, 13.0], [0.0, 0.0, 1.0], distance: 5.0)
-{:ok, frame} = Quiddity.frame(part, camera)
-{:ok, message} = Quiddity.Percept.message(frame)
-Quiddity.Percept.node_features(message)
-#=> %{"pose_vectors" => [...], "principal_curvatures_log" => [0.0, 0.0], ...}
-
-# A graph memory a Monty run loads:
-{:ok, written} = Quiddity.Monty.Training.write(part, "bracket", "bracket.jsonl.gz")
-written.nodes
-#=> 186
-```
-
-The percept is **Monty's own**
-(`Monty.Frameworks.Models.SensorModules.ObservationProcessor` over the frame),
-not a re-implementation — so a node trained from a CAD part is the percept a run
-would have made. The labels are the supervised part: quiddity says which face
-each node is on, and which feature that face belongs to, so nothing is concluded
-from evidence. And `Quiddity.Mjcf` writes the same part as a MuJoCo scene for a
-world where the agent has to make real contact.
-
-`docs/monty.md` says exactly what is faithful and what is not.
+What a perception or learning framework makes of that frame is that framework's
+business, and it is not in this package. `Quiddity.Camera.cam_to_world/1` and
+`Quiddity.Frame.semantic_3d/2` produce the two matrices such a framework
+conventionally wants; nothing here interprets them.
 
 ## As an MCP server
 
@@ -82,9 +59,9 @@ can ask about a part directly:
 {"mcpServers": {"quiddity": {"command": "mix", "args": ["run", "--no-halt", "quiddity.mcp"]}}}
 ```
 
-Nine tools: `quiddity_part`, `quiddity_features`, `quiddity_face`,
-`quiddity_probe`, `quiddity_sense`, `monty_perceive`, `monty_train`,
-`quiddity_export_mjcf`, `quiddity_correspond`.
+Seven tools: `quiddity_part`, `quiddity_features`, `quiddity_face`,
+`quiddity_probe`, `quiddity_sense`, `quiddity_correspond`,
+`quiddity_export_mjcf`.
 
 ## Install
 
@@ -116,8 +93,6 @@ test rather than a call.
   painted.
 - A geometry handle is a Rust resource: it serves every process on its node at
   once and cannot be sent to another node.
-- A CAD-built graph memory holds the part, densely and evenly. It does not hold
-  an exploration policy — that is what a training episode is for.
 
 ## Licence
 

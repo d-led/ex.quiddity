@@ -10,14 +10,17 @@ defmodule Quiddity.Mcp do
   ## What the tools are for
 
   quiddity answers "what is this part?" and this server exposes that, plus the
-  geometry underneath it, plus the bridge to Monty. The three questions worth
-  asking are different enough to be separate tools:
+  geometry underneath it. The questions worth asking are different enough to be
+  separate tools:
 
     * **what is it?** — `quiddity_part`, `quiddity_features`, `quiddity_face`;
     * **what is here?** — `quiddity_probe` and `quiddity_sense`: a ray, a point,
       and a camera frame rendered against the exact B-rep;
-    * **what would Monty perceive, and what can it learn?** — `monty_perceive`
-      answers the percept, `monty_train` writes a graph memory a run loads.
+    * **how do two parts differ?** — `quiddity_correspond` matches the features
+      of one part against another's by name and size.
+
+  `quiddity_export_mjcf` is the one tool that writes: it puts the part on disk as
+  a MuJoCo model.
 
   ## Parts are opened once
 
@@ -104,7 +107,7 @@ defmodule Quiddity.Mcp do
        "capabilities" => %{"tools" => %{"listChanged" => false}},
        "serverInfo" => %{
          "name" => "ex-quiddity",
-         "title" => "STEP parts and Monty",
+         "title" => "Manufacturing features of STEP parts",
          "version" => version()
        },
        "instructions" => instructions()
@@ -152,13 +155,11 @@ defmodule Quiddity.Mcp do
 
     WHERE SOMETHING IS: quiddity_probe answers what a ray meets, or which faces
     are nearest a point, in millimetres. quiddity_sense puts a 64 × 64 sensor on
-    the part and says what it sees, and monty_perceive turns the same frame into
-    the percept a Monty sensor module would make (surface normal, curvature,
-    on-object, and the feature it is on).
+    the part and says what it sees: depth, on-object, the normal and curvature at
+    each pixel, and the feature the surface there is on.
 
-    LEARNING: monty_train samples the part's surface and writes a graph memory a
-    Monty run loads, so a CAD part can be the object a sensorimotor learner is
-    trained on — with exact labels rather than conclusions.
+    SCENES: quiddity_export_mjcf writes the part as an MJCF model in metres, so
+    the same geometry can be simulated.
 
     Numbers are quiddity's own: a face count, a diameter in millimetres, an
     unexplained face. Where a recognition cannot prove a feature it says so, and

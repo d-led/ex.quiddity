@@ -3,10 +3,10 @@ defmodule Quiddity.Mjcf do
   A part as a MuJoCo scene: the triangles quiddity meshed, as an MJCF model.
 
   This is the bridge to a *simulated* world rather than an exact one. A B-rep can
-  be ray cast exactly — that is what `Quiddity.frame/2` does — but a surface agent
-  that has to make contact, slide and be pushed needs a physics engine, and
-  MuJoCo's is the one Monty's own surface experiments use. So the part is written
-  as a mesh geometry in metres, which is what an MJCF holds.
+  be ray cast exactly — that is what `Quiddity.frame/2` does — but a sensor that
+  has to make contact, slide and be pushed needs a physics engine. MuJoCo is the
+  one this writes for, so the part becomes a mesh geometry in metres, which is
+  what an MJCF holds.
 
   ## Units
 
@@ -19,7 +19,7 @@ defmodule Quiddity.Mjcf do
 
   It is not a model of the *agent*. A scene holds the part; a body, its sensors
   and its actuators are the experiment's, and putting them here would be a second
-  description of something Monty already configures.
+  description of something the experiment already configures.
 
   ```elixir
   {:ok, part} = Quiddity.open("bracket.step")
