@@ -1,0 +1,71 @@
+name: docs
+
+# The generated documentation, published where a person can read it without a
+# package manager: GitHub Pages. `doc/` is what `mix docs` builds — the API by
+# module, the README as the front page, `docs/why.md` and `docs/roadmap.md` beside
+# it, and the `llms.txt` ExDoc writes, which is the same surface for a model that
+# has no browser.
+#
+# The released versions are on HexDocs (`hexdocs.pm/ex_quiddity`), which is what a
+# dependency's docs point at; this publishes what is on `main`, so a change is
+# readable before it is released.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# One publication at a time: a second push while the first is deploying would
+# otherwise publish the older tree last.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+env:
+  ELIXIR_VERSION: "1.20.5"
+  OTP_VERSION: "29.1"
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+      - uses: erlef/setup-beam@v1
+        with:
+          elixir-version: ${{ env.ELIXIR_VERSION }}
+          otp-version: ${{ env.OTP_VERSION }}
+      # The engine is a Rust NIF compiled when the dependency is compiled, so
+      # `mix docs` — which compiles the tree — wants a toolchain.
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/cache@v4
+        with:
+          path: |
+            deps
+            _build
+            priv/native
+          key: ${{ runner.os }}-otp${{ env.OTP_VERSION }}-docs-${{ hashFiles('mix.lock') }}
+      - run: mix deps.get
+        env:
+          MIX_ENV: dev
+      - run: mix docs
+        env:
+          MIX_ENV: dev
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: doc
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-24.04
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
