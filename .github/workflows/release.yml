@@ -36,12 +36,17 @@ jobs:
           otp-version: ${{ env.OTP_VERSION }}
       - uses: dtolnay/rust-toolchain@stable
       - run: mix deps.get
+      # `VERSION`, the package's `@version` and the tag are three statements of one
+      # number. `check` holds the first two together; the tag is compared here,
+      # because a hand-pushed tag never went through
+      # `scripts/tag_and_push_version.sh`.
       - name: The tag is the version
         run: |
-          version=$(sed -n 's/^  @version "\(.*\)"$/\1/p' mix.exs | head -1)
+          elixir scripts/release.exs check
+          version=$(tr -d '[:space:]' < VERSION)
           tag=${GITHUB_REF_NAME#v}
           if [ "$version" != "$tag" ]; then
-            echo "mix.exs says $version and the tag says $tag — one of them is wrong" >&2
+            echo "VERSION says $version and the tag says $tag — one of them is wrong" >&2
             exit 1
           fi
       - run: mix hex.build
