@@ -1,7 +1,7 @@
 defmodule ExQuiddity.MixProject do
   use Mix.Project
 
-  @version "0.1.2"
+  @version "0.1.3"
   @source_url "https://github.com/d-led/ex.quiddity"
 
   def project do
@@ -70,11 +70,24 @@ defmodule ExQuiddity.MixProject do
   defp docs do
     [
       main: "readme",
-      extras: ["README.md", "docs/why.md", "docs/roadmap.md"],
+      extras: ["README.md", "docs/why.md", "docs/roadmap.md", "docs/development.md"],
       groups_for_modules: [
-        Geometry: [Quiddity, Quiddity.Part, Quiddity.Face, Quiddity.Camera, Quiddity.Frame],
+        Geometry: [
+          Quiddity,
+          Quiddity.Part,
+          Quiddity.Face,
+          Quiddity.Camera,
+          Quiddity.Frame
+        ],
+        "What was recognised": [Quiddity.Recognition],
         Scenes: [Quiddity.Mjcf],
-        "Model Context Protocol": [Quiddity.Mcp]
+        "Model Context Protocol": [
+          Quiddity.Mcp,
+          Quiddity.Mcp.Tools,
+          Mix.Tasks.Quiddity.Mcp
+        ],
+        Errors: [Quiddity.Error],
+        "Generating the binding": [Quiddity.Api, Quiddity.Native]
       ]
     ]
   end

@@ -1,5 +1,22 @@
 # Changelog
 
+## 0.1.3
+
+The documentation a caller reads, separated from the documentation a maintainer
+reads.
+
+### Changed
+
+- `README.md` — which Hex publishes and HexDocs renders as the front page — is
+  now the page for using the package: what it answers, the answer in one call,
+  install, the MCP server, where each other question is answered, and the limits
+  stated as limits. Everything about working on the package moved to
+  `docs/development.md`: the layout, the one table the engine is generated from,
+  the translated upstream tests, CI, and releasing.
+- The API reference has a group for every module instead of one loose list:
+  `Geometry`, `What was recognised`, `Scenes`, `Model Context Protocol`,
+  `Errors`, and `Generating the binding`.
+
 ## 0.1.2
 
 The version to install. 0.1.0 was staged on Hex for approval and superseded by
